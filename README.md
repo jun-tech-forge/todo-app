@@ -84,17 +84,19 @@ AWS コンテナ本サンプルとの互換:
 
 ## AWS CodeBuild
 
-- フロントエンド: buildspec/frontend.buildspec.yml
-- バックエンド: buildspec/backend.buildspec.yml
+- フロントエンド: frontend/buildspec.yml
+- バックエンド: backend/buildspec.yml
 
 CodeBuild 環境変数として少なくとも次を設定してください。
 
 - AWS_ACCOUNT_ID
 - AWS_REGION
 - FRONTEND_IMAGE_REPO または BACKEND_IMAGE_REPO
-- IMAGE_TAG
+- IMAGE_TAG: 未指定時は CODEBUILD_RESOLVED_SOURCE_VERSION の先頭 7 文字を使用
+- CONTAINER_NAME を変えたい場合は buildspec 内の既定値を更新
 
 ECR リポジトリ名やリージョンは buildspec に固定していません。Secrets Manager や Parameter Store の値を CodeBuild 変数へ割り当てる構成でも利用できます。
+CodeBuild の buildspec パスは frontend 用なら frontend/buildspec.yml、backend 用なら backend/buildspec.yml を指定してください。
 
 ## API 概要
 
