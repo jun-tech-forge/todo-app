@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     DOCKER_BUILDKIT: "1"
-    CONTAINER_NAME: "frontend"
+    CONTAINER_NAME: "app"
 
 phases:
   pre_build:

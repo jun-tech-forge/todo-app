@@ -1,3 +1,3 @@
 export default function HealthcheckPage() {
-  return null;
+  return <main>ok</main>;
 }
