@@ -5,3 +5,7 @@ dist
 __pycache__
 *.pyc
 postgres_data
+sql/create_table.sql
+sql/user_registration.sql
+sql/sample_insert.sql
+scripts/reset-local.sh
