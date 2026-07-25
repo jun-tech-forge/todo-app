@@ -12,8 +12,8 @@ Next.js、FastAPI、PostgreSQL で構成した ToDo CRUD アプリです。フ�
 
 - frontend と backend は別 Dockerfile、別 buildspec で独立ビルドできます。
 - AWS サンプルと同様に、frontend 用 ECS サービスと backend 用 ECS サービスへ分離してデプロイできます。
-- コンテナ内待受ポートは両方とも既定で `80` です。
-- ローカルでは Docker Compose が `localhost:3000 -> frontend:80`、`localhost:8000 -> backend:80` を中継します。
+- backend の既定待受ポートは `8081`、frontend の既定待受ポートは `8080` です。
+- ローカルでは Docker Compose が `localhost:3000 -> frontend:8080`、`localhost:8000 -> backend:8081` を中継します。
 
 ## 主な機能
 
@@ -119,7 +119,7 @@ AWS コンテナ本サンプルとの互換:
 - backend は DB_HOST / DB_USERNAME / DB_PASSWORD / DB_NAME をそのまま受け取れます。
 - frontend は APP_SERVICE_HOST を runtime で参照します。
 - DISABLE_SECURE_COOKIES もサンプルと同名で受け取れます。
-- frontend / backend ともにローカル構成では .env の PORT 系変数を使用し、サンプル値は 80 です。
+- frontend / backend ともにローカル構成では .env の PORT 系変数を使用します。サンプル値は backend が 8081、frontend が 8080 です。
 - backend は `/health` と `/healthcheck` の両方を公開します。
 - frontend は `/healthcheck` を公開します。
 
@@ -135,6 +135,9 @@ CodeBuild 環境変数として少なくとも次を設定してください。
 - APP_NAME
 - IMAGE_TAG: 未指定時は CODEBUILD_RESOLVED_SOURCE_VERSION の先頭 7 文字を使用
 - CONTAINER_NAME を変えたい場合は buildspec 内の既定値を更新
+
+frontend の buildspec は ECS サービス定義に合わせて既定で `app` を使用します。
+backend の buildspec も ECS サービス定義に合わせて既定で `app` を使用します。
 
 APP_NAME には frontend 用なら ECR リポジトリ名、backend 用なら別の ECR リポジトリ名を設定してください。Secrets Manager や Parameter Store の値を CodeBuild 変数へ割り当てる構成でも利用できます。
 CodeBuild の buildspec パスは frontend 用なら frontend/buildspec.yml、backend 用なら backend/buildspec.yml を指定してください。
