@@ -10,8 +10,8 @@ import { useSession } from "@/hooks/use-session";
 export function LoginForm() {
   const router = useRouter();
   const { login, submitting, error } = useSession();
-  const [userId, setUserId] = useState("demo");
-  const [password, setPassword] = useState("password123");
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -48,7 +48,7 @@ export function LoginForm() {
                 value={userId}
                 onChange={(event) => setUserId(event.target.value)}
                 className="w-full rounded border border-gray-300 bg-white p-3 outline-none"
-                placeholder="demo"
+                placeholder="ユーザーIDを入力"
                 autoComplete="username"
               />
             </div>
@@ -61,7 +61,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded border border-gray-300 bg-white p-3 outline-none"
-                placeholder="password123"
+                placeholder="パスワードを入力"
                 autoComplete="current-password"
               />
             </div>

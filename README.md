@@ -39,6 +39,56 @@ docker compose up --build
 - Backend healthcheck: http://localhost:8000/health
 - Backend API docs: http://localhost:8000/docs
 
+## ローカル検証手順
+
+1. コンテナ起動後に http://localhost:3000/login を開きます。
+2. 次のデモユーザーでログインします。
+
+- ユーザーID: demo
+- パスワード: .env の DEMO_USER_PASSWORD
+
+3. ログイン後、タスク一覧画面が表示されることを確認します。
+4. 必要に応じて次も確認します。
+
+- Frontend healthcheck: http://localhost:3000/healthcheck
+- Backend healthcheck: http://localhost:8000/health
+- Backend API docs: http://localhost:8000/docs
+
+API の疎通だけ確認したい場合は、ルートで次を実行します。
+
+```bash
+curl http://localhost:8000/health
+```
+
+既存の PostgreSQL ボリュームに別設定のデータベースやロールが残っていると、ローカル起動時に接続エラーになることがあります。その場合は次の完全初期化を実行してください。
+
+## 完全初期化
+
+ローカル環境をまっさらにして、誰でも同じ状態から再起動できるようにするためのスクリプトを用意しています。ルートで次を実行してください。
+
+```bash
+./scripts/reset-local.sh
+```
+
+このスクリプトは次を行います。
+
+- .env が無ければ .env.example から自動作成
+- docker compose down --volumes --remove-orphans を実行
+- PostgreSQL の永続ボリュームを削除して DB を完全初期化
+- docker compose up --build -d を実行
+- user_registration.sql の権限設定部分と、create_table.sql、sample_insert.sql を適用
+- 起動後のコンテナ状態を表示
+
+完全初期化後の既定値:
+
+- DB 名: app
+- DB ユーザー: portfoliouser
+- DB パスワード: .env の POSTGRES_PASSWORD
+- デモ ユーザー: demo
+- デモ パスワード: .env の DEMO_USER_PASSWORD
+
+完全初期化は PostgreSQL の永続データを削除するため、ローカルで保存していた ToDo データは失われます。
+
 ## デモユーザー
 
 - ユーザーID: .env の DEMO_USER_ID
@@ -55,14 +105,14 @@ docker compose up --build
 - DATABASE_URL: バックエンド用 PostgreSQL 接続 URL。未指定時は POSTGRES_* から組み立てます。
 - DB_HOST: AWS コンテナ本サンプル互換の DB ホスト名
 - DB_PORT: DB ポート。既定値は 5432
-- DB_USERNAME: AWS コンテナ本サンプル互換の DB ユーザー名
-- DB_PASSWORD: AWS コンテナ本サンプル互換の DB パスワード
-- DB_NAME: AWS コンテナ本サンプル互換の DB 名
+- DB_USERNAME: DB ユーザー名。既定値は portfoliouser
+- DB_PASSWORD: DB パスワード。既定値は設定しません。.env などで必ず指定してください
+- DB_NAME: DB 名。既定値は app
 - BACKEND_PORT: backend コンテナ待受ポート。既定値は 80
 - FRONTEND_PORT: frontend コンテナ待受ポート。既定値は 80
-- POSTGRES_DB
-- POSTGRES_USER
-- POSTGRES_PASSWORD
+- POSTGRES_DB: PostgreSQL 初期 DB 名。既定値は app
+- POSTGRES_USER: PostgreSQL 初期ユーザー名。既定値は portfoliouser
+- POSTGRES_PASSWORD: PostgreSQL 初期パスワード。既定値は設定しません。.env などで必ず指定してください
 - CORS_ORIGINS: カンマ区切り
 - SESSION_SECRET
 - SESSION_COOKIE_NAME
