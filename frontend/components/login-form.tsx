@@ -48,7 +48,7 @@ export function LoginForm() {
                 value={userId}
                 onChange={(event) => setUserId(event.target.value)}
                 className="w-full rounded border border-gray-300 bg-white p-3 outline-none"
-                placeholder="demo"
+                placeholder="ユーザーIDを入力"
                 autoComplete="username"
               />
             </div>
@@ -61,7 +61,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded border border-gray-300 bg-white p-3 outline-none"
-                placeholder="password123"
+                placeholder="パスワードを入力"
                 autoComplete="current-password"
               />
             </div>

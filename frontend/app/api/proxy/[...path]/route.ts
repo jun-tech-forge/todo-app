@@ -3,15 +3,34 @@ import { NextRequest, NextResponse } from "next/server";
 const DEFAULT_API_HOST = "http://localhost:8000/api";
 
 function resolveApiHost(): string {
-  return process.env.APP_SERVICE_HOST ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_HOST;
+  const backendSchema = process.env.BACKEND_SCHEMA ?? "http://";
+  const backendFqdn = process.env.BACKEND_FQDN;
+  const backendPort = process.env.BACKEND_PORT;
+
+  if (backendFqdn && backendPort) {
+    return `${backendSchema}${backendFqdn}:${backendPort}/api`;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("BACKEND_FQDN and BACKEND_PORT are required in production.");
+  }
+
+  return DEFAULT_API_HOST;
 }
 
 async function forwardRequest(
   request: NextRequest,
   context: { params: { path: string[] } },
 ): Promise<NextResponse> {
-  const upstream = new URL(`${resolveApiHost()}/${context.params.path.join("/")}`);
+  const apiHost = resolveApiHost();
+  const upstream = new URL(`${apiHost}/${context.params.path.join("/")}`);
   upstream.search = request.nextUrl.search;
+
+  console.info("Proxying API request", {
+    method: request.method,
+    pathname: request.nextUrl.pathname,
+    upstream: upstream.toString(),
+  });
 
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
