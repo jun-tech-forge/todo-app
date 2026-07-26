@@ -1,6 +1,6 @@
 # Todo App
 
-Next.js、FastAPI、PostgreSQL で構成した ToDo CRUD アプリです。フロントエンドは React サンプルの画面構成を踏襲し、バックエンドは FastAPI サンプルのレイヤー分割を参考にしています。
+Next.js、FastAPI、PostgreSQL で構成した ToDo CRUD アプリです。フロントエンドは React サンプルの画面構成を参考にし、バックエンドは FastAPI サンプルのレイヤー分割をベースにしています。
 
 ## 構成
 
@@ -12,8 +12,8 @@ Next.js、FastAPI、PostgreSQL で構成した ToDo CRUD アプリです。フ�
 
 - frontend と backend は別 Dockerfile、別 buildspec で独立ビルドできます。
 - AWS サンプルと同様に、frontend 用 ECS サービスと backend 用 ECS サービスへ分離してデプロイできます。
-- backend の既定待受ポートは `8081`、frontend の既定待受ポートは `8080` です。
-- ローカルでは Docker Compose が `localhost:3000 -> frontend:8080`、`localhost:8000 -> backend:8081` を中継します。
+- イメージ単体の既定待受ポートは frontend / backend ともに 80 です。
+- ローカルの Docker Compose では .env の PORT 設定を使い、既定では `localhost:3000 -> frontend:8080`、`localhost:8000 -> backend:8081` を中継します。
 
 ## 主な機能
 
@@ -26,60 +26,36 @@ Next.js、FastAPI、PostgreSQL で構成した ToDo CRUD アプリです。フ�
 
 ## ローカル起動
 
-1. .env.example を .env にコピーして必要な値を設定します。
-2. ルートで次を実行します。
+1. .env.example を .env にコピーします。
+2. .env 内の資格情報プレースホルダーを実際の値へ置き換えます。
+3. ルートで次を実行します。
 
 ```bash
-docker compose up --build
+bash scripts/reset-local.sh
 ```
 
-3. 次へアクセスします。
+scripts/reset-local.sh は次をまとめて実行します。
 
-- Frontend: http://localhost:3000
+- Docker Compose の停止とボリューム削除
+- frontend / backend / db の再ビルドと再起動
+- sql/user_registration.sql の権限付与部分の適用
+- sql/create_table.sql の適用
+- sql/sample_insert.sql の適用
+
+4. 起動後に次へアクセスします。
+
+- Frontend: http://localhost:3000/login
 - Backend healthcheck: http://localhost:8000/health
 - Backend API docs: http://localhost:8000/docs
 
 ## ローカル検証手順
 
-1. コンテナ起動後に http://localhost:3000/login を開きます。
-2. 次のデモユーザーでログインします。
-
-- ユーザーID: demo
-- パスワード: .env の DEMO_USER_PASSWORD
-
-3. ログイン後、タスク一覧画面が表示されることを確認します。
-4. 必要に応じて次も確認します。
-
-- Frontend healthcheck: http://localhost:3000/healthcheck
-- Backend healthcheck: http://localhost:8000/health
-- Backend API docs: http://localhost:8000/docs
-
-API の疎通だけ確認したい場合は、ルートで次を実行します。
-
-```bash
-curl http://localhost:8000/health
-```
-
-既存の PostgreSQL ボリュームに別設定のデータベースやロールが残っていると、ローカル起動時に接続エラーになることがあります。その場合は次の完全初期化を実行してください。
-
-## 完全初期化
-
-ローカル環境をまっさらにして、誰でも同じ状態から再起動できるようにするためのスクリプトを用意しています。ルートで次を実行してください。
-
-```bash
-./scripts/reset-local.sh
-```
-
-このスクリプトは次を行います。
-
-- .env が無ければ .env.example から自動作成
-- docker compose down --volumes --remove-orphans を実行
-- PostgreSQL の永続ボリュームを削除して DB を完全初期化
-- docker compose up --build -d を実行
-- user_registration.sql の権限設定部分と、create_table.sql、sample_insert.sql を適用
-- 起動後のコンテナ状態を表示
-
-完全初期化は PostgreSQL の永続データを削除するため、ローカルで保存していた ToDo データは失われます。
+1. bash scripts/reset-local.sh を実行して、DB を含めて初期化済みの状態を作ります。
+2. Frontend のログイン画面 http://localhost:3000/login を開きます。
+3. .env に設定した DEMO_USER_ID と DEMO_USER_PASSWORD でログインします。
+4. ToDo の新規作成、完了切替、削除、ゴミ箱表示を確認します。
+5. 必要に応じて frontend の healthcheck を http://localhost:3000/healthcheck で確認します。
+6. 必要に応じて backend の疎通を http://localhost:8000/health と http://localhost:8000/docs で確認します。
 
 ## デモユーザー
 
@@ -94,34 +70,48 @@ curl http://localhost:8000/health
 
 主要な変数:
 
-- DB_HOST: backend が参照する DB ホスト名
-- DB_PORT: backend が参照する DB ポート
-- DB_USERNAME: backend が参照する DB ユーザー名
-- DB_PASSWORD: backend が参照する DB パスワード
-- DB_NAME: backend が参照する DB 名
-- BACKEND_PORT: backend コンテナ待受ポート
 - FRONTEND_PORT: frontend コンテナ待受ポート
-- POSTGRES_DB: PostgreSQL 初期 DB 名
-- POSTGRES_USER: PostgreSQL 初期ユーザー名
-- POSTGRES_PASSWORD: PostgreSQL 初期パスワード
-- CORS_ORIGINS: カンマ区切り
-- SESSION_SECRET: セッション署名キー
-- SESSION_COOKIE_NAME: セッション Cookie 名
-- DISABLE_SECURE_COOKIES: secure Cookie を無効化する場合は true
-- APP_SERVICE_HOST: frontend が runtime で参照する backend API ホスト
-- NEXT_PUBLIC_API_BASE_URL: frontend の API ベース URL
-- DEMO_USER_ID: デモユーザー ID
-- DEMO_USER_NAME: デモユーザー表示名
-- DEMO_USER_PASSWORD: デモユーザーパスワード
+- BACKEND_SCHEMA: frontend が backend URL を組み立てる際のスキーマ
+- BACKEND_FQDN: frontend が runtime で参照する backend のホスト名
+
+- DB_HOST: アプリケーションが接続する PostgreSQL のホスト名
+- DB_PORT: アプリケーションが接続する PostgreSQL のポート
+- DB_USERNAME: アプリケーションが接続する PostgreSQL のユーザー名
+- DB_PASSWORD: アプリケーションが接続する PostgreSQL のパスワード
+- DB_NAME: アプリケーションが接続する PostgreSQL のデータベース名
+
+- POSTGRES_DB: PostgreSQL コンテナ初期化時に作成するデータベース名
+- POSTGRES_USER: PostgreSQL コンテナ初期化時に作成するユーザー名
+- POSTGRES_PASSWORD: PostgreSQL コンテナ初期化時に設定するパスワード
+
+- CORS_ORIGINS: backend が許可するオリジンの一覧。カンマ区切りで指定します。
+- SESSION_SECRET: セッション Cookie の署名に使う秘密鍵
+- SESSION_COOKIE_NAME: セッション Cookie の名前
+- DISABLE_SECURE_COOKIES: true の場合は Secure 属性なしで Cookie を発行します
+- LOG_SQL: true の場合は SQL ログを出力します
+
+- DEMO_USER_ID: 起動時に自動作成するデモユーザーのログイン ID
+- DEMO_USER_NAME: 起動時に自動作成するデモユーザーの表示名
+- DEMO_USER_PASSWORD: 起動時に自動作成するデモユーザーのパスワード
+
+ECS 2サービス構成での frontend から backend への接続:
+
+- frontend は browser から backend を直接呼ばず、Next.js の proxy ルート経由で backend API を呼びます。
+- ECS 本番では frontend タスク定義に BACKEND_FQDN と BACKEND_PORT を必ず設定してください。
+- 必要に応じて BACKEND_SCHEMA も設定してください。既定値は http:// です。
+- 例: BACKEND_SCHEMA=http://, BACKEND_FQDN=backend-app.portfolio.local, BACKEND_PORT=8081
+- ECS 本番で BACKEND_FQDN / BACKEND_PORT が未設定の場合、frontend は起動しても API proxy が失敗します。
+- localhost や 127.0.0.1 は frontend コンテナ自身を指すため、2サービス構成の backend 接続先には使えません。
 
 AWS コンテナ本サンプルとの互換:
 
+- frontend は BACKEND_SCHEMA / BACKEND_FQDN / BACKEND_PORT から backend 接続先を runtime で組み立てます。
+- frontend の API proxy は production で BACKEND_FQDN / BACKEND_PORT 未設定を許可しません。
 - backend は DB_HOST / DB_USERNAME / DB_PASSWORD / DB_NAME をそのまま受け取れます。
-- frontend は APP_SERVICE_HOST を runtime で参照します。
 - DISABLE_SECURE_COOKIES もサンプルと同名で受け取れます。
-- frontend / backend ともにローカル構成では .env の PORT 系変数を使用します。サンプル値は backend が 8081、frontend が 8080 です。
-- backend は `/health` と `/healthcheck` の両方を公開します。
+- Docker Compose 利用時は frontend / backend のコンテナ内ポートを .env の FRONTEND_PORT / BACKEND_PORT で明示的に指定します。
 - frontend は `/healthcheck` を公開します。
+- backend は `/health` と `/healthcheck` の両方を公開します。
 
 ## AWS CodeBuild
 
@@ -136,10 +126,7 @@ CodeBuild 環境変数として少なくとも次を設定してください。
 - IMAGE_TAG: 未指定時は CODEBUILD_RESOLVED_SOURCE_VERSION の先頭 7 文字を使用
 - CONTAINER_NAME を変えたい場合は buildspec 内の既定値を更新
 
-frontend の buildspec は ECS サービス定義に合わせて既定で `app` を使用します。
-backend の buildspec も ECS サービス定義に合わせて既定で `app` を使用します。
-
-APP_NAME には frontend 用なら ECR リポジトリ名、backend 用なら別の ECR リポジトリ名を設定してください。Secrets Manager や Parameter Store の値を CodeBuild 変数へ割り当てる構成でも利用できます。
+APP_NAME には frontend 用なら ECR リポジトリ名、backend 用なら別の ECR リポジトリ名を設定してください。
 CodeBuild の buildspec パスは frontend 用なら frontend/buildspec.yml、backend 用なら backend/buildspec.yml を指定してください。
 
 ## API 概要
@@ -155,5 +142,5 @@ CodeBuild の buildspec パスは frontend 用なら frontend/buildspec.yml、ba
 
 ## 開発メモ
 
-- 認証は将来 JWT へ差し替えやすいように dependencies/auth.py へ集約しています。
-- フロントエンドの axios 設定は lib/api-client.ts に集約しています。
+- 認証は将来 JWT へ差し替えやすいように backend/app/dependencies/auth.py へ集約しています。
+- フロントエンドの axios 設定は frontend/lib/api-client.ts に集約しています。
