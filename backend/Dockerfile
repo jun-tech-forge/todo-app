@@ -34,6 +34,6 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY app ./app
 COPY scripts ./scripts
 
-EXPOSE 80
+EXPOSE 8081
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-80}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8081}"]

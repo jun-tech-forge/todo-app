@@ -10,8 +10,8 @@ import { useSession } from "@/hooks/use-session";
 export function LoginForm() {
   const router = useRouter();
   const { login, submitting, error } = useSession();
-  const [userId, setUserId] = useState("demo");
-  const [password, setPassword] = useState("password123");
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

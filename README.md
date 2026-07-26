@@ -66,7 +66,7 @@ scripts/reset-local.sh は次をまとめて実行します。
 
 ## 環境変数
 
-ローカルでは .env または Docker Compose の environment を使用します。AWS では Secrets Manager、Systems Manager Parameter Store、ECS タスク定義などからコンテナ環境変数へ注入する前提です。アプリケーションは取得元を意識せず、最終的に環境変数だけを参照します。
+ローカルでは .env の値を Docker Compose 経由で各コンテナへ渡します。AWS では Secrets Manager、Systems Manager Parameter Store、ECS タスク定義などからコンテナ環境変数へ注入する前提です。アプリケーションは取得元を意識せず、最終的に環境変数だけを参照します。
 
 主要な変数:
 
