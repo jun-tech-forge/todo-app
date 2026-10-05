@@ -58,6 +58,22 @@ export function useTodos() {
     }
   };
 
+  const trashTodo = async (todoId: number) => {
+    setSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const response = await apiClient.patch<TodoItem>(`/todos/${todoId}`, { status: "trashed" });
+      setTodos((prev) => prev.map((todo) => (todo.id === todoId ? response.data : todo)));
+      setSuccessMessage("ToDo を削除しました。");
+    } catch (trashError) {
+      setError(getErrorMessage(trashError, "ToDo の削除に失敗しました。"));
+      throw trashError;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteTodo = async (todoId: number) => {
     setSaving(true);
     setError(null);
@@ -103,6 +119,7 @@ export function useTodos() {
     loadTodos,
     createTodo,
     updateTodo,
+    trashTodo,
     deleteTodo,
     emptyTrash,
   };

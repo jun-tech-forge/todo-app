@@ -17,10 +17,16 @@ const inputVariants = cva("flex-1 border border-gray-300 bg-white px-2 py-1", {
 
 export function TaskItem({
   task,
+  markedForDeletion,
+  onToggleMarkedForDeletion,
   onChange,
+  onDelete,
 }: {
   task: TodoItem;
+  markedForDeletion: boolean;
+  onToggleMarkedForDeletion: (todoId: number, checked: boolean) => void;
   onChange: (todoId: number, payload: { title?: string; status?: "not_started" | "completed" | "trashed" }) => Promise<void>;
+  onDelete: (todoId: number) => Promise<void>;
 }) {
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing || event.key !== "Enter") {
@@ -34,14 +40,13 @@ export function TaskItem({
       <input
         type="checkbox"
         className="size-5 cursor-pointer"
-        checked={task.status === "completed"}
-        onChange={(event) => void onChange(task.id, { status: event.target.checked ? "completed" : "not_started" })}
+        checked={markedForDeletion}
+        onChange={(event) => onToggleMarkedForDeletion(task.id, event.target.checked)}
       />
       <input
         type="text"
-        className={inputVariants({ completed: task.status === "completed" })}
+        className={inputVariants({ completed: false })}
         defaultValue={task.title}
-        disabled={task.status === "completed"}
         onKeyDown={handleKeyDown}
         onBlur={(event) => {
           const nextTitle = event.target.value.trim();
@@ -52,8 +57,9 @@ export function TaskItem({
       />
       <button
         type="button"
-        className="rounded bg-gray-200 p-2 transition-colors hover:bg-gray-300"
-        onClick={() => void onChange(task.id, { status: "trashed" })}
+        className="rounded p-2 transition-colors disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-300 enabled:bg-gray-200 enabled:hover:bg-gray-300"
+        onClick={() => void onDelete(task.id)}
+        disabled={!markedForDeletion}
         aria-label={`タスク「${task.title}」をゴミ箱へ移動する`}
       >
         <Trash2 className="size-5 text-gray-500" />

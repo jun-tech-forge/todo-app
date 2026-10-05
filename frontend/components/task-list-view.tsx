@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { CreateTaskForm } from "@/components/create-task-form";
 import { TaskItem } from "@/components/task-item";
 import { AppShell } from "@/components/app-shell";
@@ -16,8 +18,23 @@ export function TaskListView() {
 }
 
 function TaskListContent() {
-  const { todos, loading, saving, error, successMessage, createTodo, updateTodo } = useTodos();
+  const { todos, loading, saving, error, successMessage, createTodo, updateTodo, trashTodo } = useTodos();
+  const [markedForDeletionIds, setMarkedForDeletionIds] = useState<number[]>([]);
   const activeTasks = todos.filter((task) => task.status !== "trashed");
+
+  const handleToggleMarkedForDeletion = (todoId: number, checked: boolean) => {
+    setMarkedForDeletionIds((prev) => {
+      if (checked) {
+        return prev.includes(todoId) ? prev : [...prev, todoId];
+      }
+      return prev.filter((id) => id !== todoId);
+    });
+  };
+
+  const handleDelete = async (todoId: number) => {
+    await trashTodo(todoId);
+    setMarkedForDeletionIds((prev) => prev.filter((id) => id !== todoId));
+  };
 
   if (loading) {
     return <LoadingScreen label="ToDo を読み込んでいます..." />;
@@ -36,7 +53,16 @@ function TaskListContent() {
           {activeTasks.length === 0 ? (
             <p className="text-center text-sm">タスクがありません</p>
           ) : (
-            activeTasks.map((task) => <TaskItem key={task.id} task={task} onChange={updateTodo} />)
+            activeTasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                markedForDeletion={markedForDeletionIds.includes(task.id)}
+                onToggleMarkedForDeletion={handleToggleMarkedForDeletion}
+                onChange={updateTodo}
+                onDelete={handleDelete}
+              />
+            ))
           )}
         </div>
       </div>
