@@ -142,6 +142,10 @@ ToDo API は次のとおりです。
 
 AWS 環境では、Frontend と Backend を別々の ECS サービスとしてデプロイします。
 
+![AWSアーキテクチャ図](images/AWS%E3%82%A2%E3%83%BC%E3%82%AD%E3%83%86%E3%82%AF%E3%83%81%E3%83%A3%E5%9B%B3.png)
+
+この構成では、インターネットからのアクセスを ALB で受け付け、フロントエンドとバックエンドをそれぞれ ECS Fargate 上で稼働させます。バックエンドは Aurora PostgreSQL に接続し、ECR からコンテナイメージを取得します。機密情報は Secrets Manager から注入し、ログとメトリクスは CloudWatch へ送信します。
+
 - Frontend ECS Service
   - Next.js アプリケーションを実行します。
   - Proxy Route を通じて Backend ECS Service を呼び出します。
