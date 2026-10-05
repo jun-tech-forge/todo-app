@@ -12,28 +12,27 @@ phases:
       - test -n "$AWS_ACCOUNT_ID"
       - test -n "$AWS_REGION"
       - test -n "$APP_NAME"
-      - export DOCKER_CONTENT_TRUST=1
       - export ECR_REPOS_DOMAIN=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - export ECR_REPOS_URI=${ECR_REPOS_DOMAIN}/${APP_NAME}
       - export IMAGE_TAG=${IMAGE_TAG:-$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)}
       - echo ECR_REPOS_URI=${ECR_REPOS_URI}
+      - echo IMAGE_TAG=${IMAGE_TAG}
 
   build:
     commands:
       - echo ===== build phase =====
       - echo Docker Build started on `date`
       - echo Building the Docker image...
-      - docker buildx build -f frontend/Dockerfile -t ${APP_NAME}:latest frontend
+      - docker buildx build --load --progress=plain -f frontend/Dockerfile -t ${APP_NAME}:latest frontend
       - docker image tag ${APP_NAME}:latest ${ECR_REPOS_URI}:${IMAGE_TAG}
       - docker image ls
       - echo Completed the ${APP_NAME} Docker image build.
-      - export DOCKER_CONTENT_TRUST=0
 
   post_build:
     commands:
       - echo ===== post build phase =====
       - echo Logging in to Amazon ECR.
-      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "https://${ECR_REPOS_DOMAIN}"
+      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${ECR_REPOS_DOMAIN}"
       - echo Docker Image ${APP_NAME} pushing to ECR on `date`
       - docker image push ${ECR_REPOS_URI}:${IMAGE_TAG}
       - echo '[{"name":"'${CONTAINER_NAME}'","imageUri":"'${ECR_REPOS_URI}':'${IMAGE_TAG}'"}]' > imagedefinitions.json
